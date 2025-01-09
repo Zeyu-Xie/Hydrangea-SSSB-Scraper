@@ -25,11 +25,18 @@ class Apartment:
         WebDriverWait(driver, INF).until(lambda d: d.find_element(By.XPATH, XPATH))
         try:
             if position == "text":
+                WebDriverWait(driver, INF).until(
+                    lambda d: d.find_element(By.XPATH, XPATH).text != ""
+                )
                 return driver.find_element(By.XPATH, XPATH).text
             elif position == "href":
+                WebDriverWait(driver, INF).until(
+                    lambda d: d.find_element(By.XPATH, XPATH).get_attribute("href")
+                    != ""
+                )
                 return driver.find_element(By.XPATH, XPATH).get_attribute("href")
             else:
-                return "1"
+                return ""
         except Exception as e:
             return None
 
@@ -148,7 +155,7 @@ class Apartment:
         }
 
     def _to_csv_row(self):
-        return f"{self.title},{self.object_number},{self.housing_area['name']},{self.housing_area['link']},{self.address},{self.type_of_accommodation},{self.living_space},{self.floor},{self.monthly_rent},{self.elevator},{self.rental_agreement_valid_from},{self.booking_status['bookings']},{self.booking_status['highest_credit_days']},{self.application_deadline['date']},{self.application_deadline['time']},{self.link}"
+        return f"{self.title}, {self.object_number}, {self.housing_area['name']}, {self.housing_area['link']}, {self.address}, {self.type_of_accommodation}, {self.living_space}, {self.floor}, {self.monthly_rent}, {self.elevator}, {self.rental_agreement_valid_from}, {self.booking_status['bookings']}, {self.booking_status['highest_credit_days']}, {self.application_deadline['date']}, {self.application_deadline['time']}, {self.link}"
 
 
 def _get_apartment_link_list():
@@ -198,7 +205,12 @@ def save_to_json(apartment_list):
     with open(
         f"apartment_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json", "w"
     ) as f:
-        json.dump([apartment.to_object() for apartment in apartment_list], f, indent=4, ensure_ascii=False)
+        json.dump(
+            [apartment.to_object() for apartment in apartment_list],
+            f,
+            indent=4,
+            ensure_ascii=False,
+        )
 
 
 def save_to_csv(apartment_list):
@@ -206,7 +218,7 @@ def save_to_csv(apartment_list):
         f"apartment_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv", "w"
     ) as f:
         f.write(
-            "title,object_number,housing_area_name,housing_area_link,address,type_of_accommodation,living_space,floor,monthly_rent,elevator,rental_agreement_valid_from,booking_status_bookings,booking_status_highest_credit_days,application_deadline_date,application_deadline_time,link\n"
+            "title, object_number, housing_area_name, housing_area_link, address, type_of_accommodation, living_space, floor, monthly_rent, elevator, rental_agreement_valid_from, booking_status_bookings, booking_status_highest_credit_days, application_deadline_date, application_deadline_time, link\n"
         )
         for apartment in apartment_list:
             f.write(apartment._to_csv_row() + "\n")
@@ -214,12 +226,13 @@ def save_to_csv(apartment_list):
 
 if __name__ == "__main__":
 
+    print_log("Start getting apartment information")
     status, apartment_list = main()
-
     if status != "Success":
         print_log("Script ended with error")
         sys.exit(1)
-
     print_log("Finish getting apartment information")
     save_to_json(apartment_list)
+    print_log("Save to json")
     save_to_csv(apartment_list)
+    print_log("Save to csv")
