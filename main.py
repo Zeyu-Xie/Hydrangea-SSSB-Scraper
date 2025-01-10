@@ -21,7 +21,7 @@ class Apartment:
 
     global driver
 
-    def __get_apartment_attribute(self, XPATH, position):
+    def __get_apartment_attribute_by_xPath(self, XPATH, position):
         WebDriverWait(driver, INF).until(lambda d: d.find_element(By.XPATH, XPATH))
         try:
             if position == "text":
@@ -40,69 +40,94 @@ class Apartment:
         except Exception as e:
             return None
 
+    def __get_apartment_attribute_by_className(self, className, position):
+        WebDriverWait(driver, INF).until(
+            lambda d: d.find_elements(By.CLASS_NAME, className)[1]
+        )
+        try:
+            if position == "text":
+                WebDriverWait(driver, INF).until(
+                    lambda d: d.find_elements(By.CLASS_NAME, className)[1].text != ""
+                )
+                return driver.find_elements(By.CLASS_NAME, className)[1].text
+            elif position == "href":
+                WebDriverWait(driver, INF).until(
+                    lambda d: d.find_elements(By.CLASS_NAME, className)[
+                        1
+                    ].get_attribute("href")
+                    != ""
+                )
+                return driver.find_elements(By.CLASS_NAME, className)[1].get_attribute(
+                    "href"
+                )
+            else:
+                return ""
+        except Exception as e:
+            return None
+
     def __init__(self, link):
 
         global driver
         driver.get(link)
 
         # Title
-        self.title = self.__get_apartment_attribute(
+        self.title = self.__get_apartment_attribute_by_xPath(
             XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[2]/h1',
             position="text",
         )
         # Object Number
-        self.object_number = self.__get_apartment_attribute(
+        self.object_number = self.__get_apartment_attribute_by_xPath(
             XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[2]/h5/em',
             position="text",
         )
         # Housing Area
         self.housing_area = {
-            "name": self.__get_apartment_attribute(
+            "name": self.__get_apartment_attribute_by_xPath(
                 XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[5]/div/div/dl/dd[2]/a',
                 position="text",
             ),
-            "link": self.__get_apartment_attribute(
+            "link": self.__get_apartment_attribute_by_xPath(
                 XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[5]/div/div/dl/dd[2]/a',
                 position="href",
             ),
         }
         # Address
-        self.address = self.__get_apartment_attribute(
-            XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[5]/div/div/dl/dd[3]',
+        self.address = self.__get_apartment_attribute_by_className(
+            className="ObjektAdress",
             position="text",
         )
         # Type of Accommodation
-        self.type_of_accommodation = self.__get_apartment_attribute(
-            XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[5]/div/div/dl/dd[4]',
+        self.type_of_accommodation = self.__get_apartment_attribute_by_className(
+            className="ObjektTyp",
             position="text",
         )
         # Living Space
-        self.living_space = self.__get_apartment_attribute(
-            XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[5]/div/div/dl/dd[5]',
+        self.living_space = self.__get_apartment_attribute_by_className(
+            className="ObjektYta",
             position="text",
         )
         # Floor
-        self.floor = self.__get_apartment_attribute(
-            XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[5]/div/div/dl/dd[6]',
+        self.floor = self.__get_apartment_attribute_by_className(
+            className="ObjektVaning",
             position="text",
         )
         # Monthly Rent
-        self.monthly_rent = self.__get_apartment_attribute(
-            XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[5]/div/div/dl/dd[7]',
+        self.monthly_rent = self.__get_apartment_attribute_by_className(
+            className="ObjektHyra",
             position="text",
         )
         # Elevator
-        self.elevator = self.__get_apartment_attribute(
-            XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[5]/div/div/dl/dd[8]',
+        self.elevator = self.__get_apartment_attribute_by_className(
+            className="ObjektHiss",
             position="text",
         )
         # The Rental Agreement is Valid From
-        self.rental_agreement_valid_from = self.__get_apartment_attribute(
-            XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[5]/div/div/dl/dd[9]',
+        self.rental_agreement_valid_from = self.__get_apartment_attribute_by_className(
+            className="ObjektInflytt",
             position="text",
         )
         # Booking Status
-        _booking_status_string = self.__get_apartment_attribute(
+        _booking_status_string = self.__get_apartment_attribute_by_xPath(
             XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[8]',
             position="text",
         )
@@ -118,7 +143,7 @@ class Apartment:
             "highest_credit_days": _booking_status_number_list[1],
         }
         # Application Deadline
-        _application_deadline = self.__get_apartment_attribute(
+        _application_deadline = self.__get_apartment_attribute_by_xPath(
             XPATH='//*[@id="SubNavigationContentContainer"]/div[1]/div[10]/div',
             position="text",
         )
@@ -155,7 +180,8 @@ class Apartment:
         }
 
     def _to_csv_row(self):
-        return f"{self.title}, {self.object_number}, {self.housing_area['name']}, {self.housing_area['link']}, {self.address}, {self.type_of_accommodation}, {self.living_space}, {self.floor}, {self.monthly_rent}, {self.elevator}, {self.rental_agreement_valid_from}, {self.booking_status['bookings']}, {self.booking_status['highest_credit_days']}, {self.application_deadline['date']}, {self.application_deadline['time']}, {self.link}"
+        _csv_row_str = f"{self.title}, {self.object_number}, {self.housing_area['name']}, {self.housing_area['link']}, {self.address}, {self.type_of_accommodation}, {self.living_space}, {self.floor}, {self.monthly_rent}, {self.elevator}, {self.rental_agreement_valid_from}, {self.booking_status['bookings']}, {self.booking_status['highest_credit_days']}, {self.application_deadline['date']}, {self.application_deadline['time']}, {self.link}"
+        return _csv_row_str
 
 
 def _get_apartment_link_list():
